@@ -1,29 +1,34 @@
 import sys
 import pdb
+import re
 
 def main(argv, argc):
-    CITY_FILE = 1
-    FEATURES_FILE = 2
+    UNRATED = 99.0
 
     if argv < 3:
-        print("Usage: python main.py <city-file> <features-file>")
+        print("Usage: python main.py <jester-data>")
         exit(1)
 
-    cityFile = open(argv[CITY_FILE], 'r')
-    featuresFile = open(argv[FEATURES_FILE], 'r')
+    data = fileIO(argv)
 
-    featuresDict = {}
-    for l in featuresFile.readlines():
-        line = l.split()
-        id = int(l[:3])
-        classification = l[4:]
-        pdb.set_trace()
-
-        featuresDict[id] = line[classification]
+    pdb.set_trace()
 
 
+def fileIO(argv):
+    DATA_FILE = 1
+    data = []
+    file = open(argv[DATA_FILE], 'r')
+    for line in file.readlines():
+        splitLine = line.split(",")
+        tempDict = {}
 
-
+        tempDict["rated_count"] = str(re.sub('[!\xef\xbb\xbf]', '', splitLine[0]))
+        tempList = []
+        for i in range(1, len(splitLine)):
+            tempList.append(float(splitLine[i]))
+        tempDict["ratings"] = tempList
+        data.append(tempDict)
+    return data
 
 
 if __name__ == "__main__":
