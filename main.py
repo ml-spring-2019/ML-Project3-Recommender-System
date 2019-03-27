@@ -10,8 +10,9 @@ def main(argv, argc):
         print("Usage: python main.py <jester-data>")
         exit(1)
 
-    data = fileIO(argv)
+    data, jokeCountList = fileIO(argv)
     meanNormalization(data)
+
 
     pdb.set_trace()
 
@@ -21,17 +22,15 @@ def fileIO(argv):
     DATA_FILE = 1
     data = []
     file = open(argv[DATA_FILE], 'r')
+    jokeCountlist = []
     for line in file.readlines():
         splitLine = line.split(",")
-        tempDict = {}
-
-        tempDict["rated_count"] = str(re.sub('[!\xef\xbb\xbf]', '', splitLine[0]))
+        jokeCountlist.append(str(re.sub('[!\xef\xbb\xbf]', '', splitLine[0])))
         tempList = []
         for i in range(1, len(splitLine)):
             tempList.append(float(splitLine[i]))
-        tempDict["ratings"] = tempList
-        data.append(tempDict)
-    return data
+        data.append(tempList)
+    return data, jokeCountlist
 
 
 def isUnrated(rating):
@@ -41,17 +40,13 @@ def isUnrated(rating):
 def meanNormalization(data):
     print("-> meanNormalization()")
 
-    jokeRatingTotal = 0.0
-    jokeRatingAverage = 0.0
-
     for joke in range(0, NUMBER_OF_JOKES):
 
         jokeRatingCount = 0.0
         jokeRatingTotal = 0.0
-        jokeRatingAverage = 0.0
 
         for d in data:
-            rating = d["ratings"][joke]
+            rating = d[joke]
             if not isUnrated(rating):
                 jokeRatingTotal += rating
                 jokeRatingCount += 1
@@ -59,9 +54,9 @@ def meanNormalization(data):
         jokeRatingAverage = jokeRatingTotal / jokeRatingCount
 
         for i in range(0, len(data)):
-            rating = data[i]["ratings"][joke]
+            rating = data[i][joke]
             if not isUnrated(rating):
-                data[i]["ratings"][joke] -= jokeRatingAverage
+                data[i][joke] -= jokeRatingAverage
 
 if __name__ == "__main__":
     main(sys.argv, len(sys.argv))
