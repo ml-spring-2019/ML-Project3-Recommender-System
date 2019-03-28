@@ -1,9 +1,11 @@
 import sys
 import pdb
 import re
+import random
 
 NUMBER_OF_JOKES = 100
 UNRATED = 99.0
+FEATURE_COUNT = 5
 
 def main(argv, argc):
     if argc < 2:
@@ -13,8 +15,21 @@ def main(argv, argc):
     ratings, answeredCount = fileIO(argv)
     # meanNormalization(ratings)
 
-    for i in range(0, len(ratings)):
-        pdb.set_trace()
+    features = init_features()
+
+    pdb.set_trace()
+
+
+def init_features():
+    features = []
+    for _ in range(0, FEATURE_COUNT):
+        tempFeatures = []
+        for _ in range(0, NUMBER_OF_JOKES):
+            # random number between -1.0 and 1.0 inclusive
+            randomNum = round(float(random.randint(0, 200)) / 100 - 1, 2)
+            tempFeatures.append(randomNum)
+        features.append(tempFeatures)
+    return features
 
 
 def fileIO(argv):
