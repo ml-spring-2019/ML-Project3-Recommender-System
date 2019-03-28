@@ -6,6 +6,10 @@
     preferences: 2d numpy array
     row - preference scores
     column - user preferences
+    
+    ratings: 2d numpy array
+    row - user ratings
+    column - joke ratings
 '''
 
 import sys
@@ -26,11 +30,28 @@ def main(argv, argc):
     ratings, answeredCount = fileIO(argv)
     # meanNormalization(ratings)
 
-    features = init_data(FEATURE_COUNT)
-    prefs = init_data(len(ratings))
+    features = np.asarray(init_data(FEATURE_COUNT))
+    prefs = np.asarray(init_data(len(ratings)))
+
+    collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
 
     pdb.set_trace()
 
+#   row - i
+#   column - k
+#   FEATURE_COUNT
+#
+# need function for regularized gradient descent for the theta and x values
+def collaborativeFilteringAlgorithm(features, prefs, ratings):
+    feature_dimensions = np.shape(features)
+    prefs_dimensions = np.shape(prefs)
+    transposed_prefs = np.transpose(prefs)
+    
+    for i in range(feature_dimensions[1]):
+        for f in range(prefs_dimensions[1]):
+            pdb.set_trace()
+            np.matmul(transposed_prefs[f,:],feature[:,i])
+    return
 
 def init_data(size):
     features = []
@@ -84,9 +105,6 @@ def meanNormalization(ratings):
             rating = ratings[i][joke]
             if not isUnrated(rating):
                 ratings[i][joke] -= jokeRatingAverage
-
-def collaborativeFilteringAlgorithm():
-#
 
 
 if __name__ == "__main__":
