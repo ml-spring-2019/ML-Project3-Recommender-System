@@ -15,14 +15,15 @@ def main(argv, argc):
     ratings, answeredCount = fileIO(argv)
     # meanNormalization(ratings)
 
-    features = init_features()
+    features = init_data(FEATURE_COUNT)
+    prefs = init_data(len(ratings))
 
     pdb.set_trace()
 
 
-def init_features():
+def init_data(size):
     features = []
-    for _ in range(0, FEATURE_COUNT):
+    for _ in range(0, size):
         tempFeatures = []
         for _ in range(0, NUMBER_OF_JOKES):
             # random number between -1.0 and 1.0 inclusive
