@@ -1,7 +1,18 @@
+'''
+    features: 2d numpy array
+    row - feature scores
+    column - joke features
+    
+    preferences: 2d numpy array
+    row - preference scores
+    column - user preferences
+'''
+
 import sys
 import pdb
 import re
 import random
+import numpy as np
 
 NUMBER_OF_JOKES = 100
 UNRATED = 99.0
@@ -73,8 +84,8 @@ def meanNormalization(ratings):
             if not isUnrated(rating):
                 ratings[i][joke] -= jokeRatingAverage
 
-
-
+def collaborativeFilteringAlgorithm():
+#
 
 
 if __name__ == "__main__":
