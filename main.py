@@ -6,38 +6,38 @@ NUMBER_OF_JOKES = 100
 UNRATED = 99.0
 
 def main(argv, argc):
-    if argv < 3:
+    if argc < 2:
         print("Usage: python main.py <jester-data>")
         exit(1)
 
-    data, jokeCountList = fileIO(argv)
-    meanNormalization(data)
+    ratings, answeredCount = fileIO(argv)
+    # meanNormalization(ratings)
 
-
-    pdb.set_trace()
+    for i in range(0, len(ratings)):
+        pdb.set_trace()
 
 
 def fileIO(argv):
     print("-> fileIO()")
     DATA_FILE = 1
-    data = []
+    ratings = []
     file = open(argv[DATA_FILE], 'r')
-    jokeCountlist = []
+    answeredCount = []
     for line in file.readlines():
         splitLine = line.split(",")
-        jokeCountlist.append(str(re.sub('[!\xef\xbb\xbf]', '', splitLine[0])))
+        answeredCount.append(str(re.sub('[!\xef\xbb\xbf]', '', splitLine[0])))
         tempList = []
         for i in range(1, len(splitLine)):
             tempList.append(float(splitLine[i]))
-        data.append(tempList)
-    return data, jokeCountlist
+        ratings.append(tempList)
+    return ratings, answeredCount
 
 
 def isUnrated(rating):
     return rating == UNRATED
 
 
-def meanNormalization(data):
+def meanNormalization(ratings):
     print("-> meanNormalization()")
 
     for joke in range(0, NUMBER_OF_JOKES):
@@ -45,7 +45,7 @@ def meanNormalization(data):
         jokeRatingCount = 0.0
         jokeRatingTotal = 0.0
 
-        for d in data:
+        for d in ratings:
             rating = d[joke]
             if not isUnrated(rating):
                 jokeRatingTotal += rating
@@ -53,10 +53,14 @@ def meanNormalization(data):
 
         jokeRatingAverage = jokeRatingTotal / jokeRatingCount
 
-        for i in range(0, len(data)):
-            rating = data[i][joke]
+        for i in range(0, len(ratings)):
+            rating = ratings[i][joke]
             if not isUnrated(rating):
-                data[i][joke] -= jokeRatingAverage
+                ratings[i][joke] -= jokeRatingAverage
+
+
+
+
 
 if __name__ == "__main__":
     main(sys.argv, len(sys.argv))
