@@ -57,7 +57,8 @@ def collaborativeFilteringAlgorithm(features, prefs, ratings):
     for i in range(feature_dimensions[1]):
         for f in range(prefs_dimensions[1]):
             pdb.set_trace()
-            np.matmul(transposed_prefs[f,:],feature[:,i])
+            predicted_rating = np.matmul(transposed_prefs[f,:],features[:,i])
+            error_rate = predicted_rating - 
     return
 
 def config_read():
