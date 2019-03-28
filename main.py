@@ -17,24 +17,31 @@ import pdb
 import re
 import random
 import numpy as np
+import json
+from matplotlib import pyplot
 
 NUMBER_OF_JOKES = 100
 UNRATED = 99.0
 FEATURE_COUNT = 5
+CONFIG_FILE = "config.json"
 
 def main(argv, argc):
     if argc < 2:
         print("Usage: python main.py <jester-data>")
         exit(1)
 
+    cf_lambda, cf_alpha = config_read()
+
     ratings, answeredCount = fileIO(argv)
     # meanNormalization(ratings)
 
-    features = np.asarray(init_data(FEATURE_COUNT))
-    prefs = np.asarray(init_data(len(ratings)))
+    features = np.asarray(init_data(NUMBER_OF_JOKES, FEATURE_COUNT))
+    prefs = np.asarray(init_data(FEATURE_COUNT, len(ratings)))
 
     collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
 
+    # example_results = [1.1, 3.3, 6.6, 3.8, 5.2, 1.9, 0.7]
+    # plotResults(example_results)
     pdb.set_trace()
 
 #   row - i
@@ -53,11 +60,18 @@ def collaborativeFilteringAlgorithm(features, prefs, ratings):
             np.matmul(transposed_prefs[f,:],feature[:,i])
     return
 
-def init_data(size):
+def config_read():
+    print("-> config_read()")
+    configFile = json.loads(open(CONFIG_FILE, 'r').read())
+    return configFile["lambda"], configFile["alpha"]
+
+
+def init_data(rows, cols):
+    print("-> init_data(size=" + str(size) + ")")
     features = []
-    for _ in range(0, size):
+    for _ in range(0, rows):
         tempFeatures = []
-        for _ in range(0, NUMBER_OF_JOKES):
+        for _ in range(0, cols):
             # random number between -1.0 and 1.0 inclusive
             randomNum = round(float(random.randint(0, 200)) / 100 - 1, 2)
             tempFeatures.append(randomNum)
@@ -106,6 +120,25 @@ def meanNormalization(ratings):
             if not isUnrated(rating):
                 ratings[i][joke] -= jokeRatingAverage
 
+def plotResults(squaredErrorRateList):
+    plotList = []
+
+    xLabel = "Iterations"
+    yLabel = "Squared Error Rate"
+    plotTitle = "Squared Error Rate Change per Iteration"
+    showGrid = True
+    outputFile = ""
+
+    for i in range(1, len(squaredErrorRateList)):
+        plotList.extend([i, squaredErrorRateList[i]])
+
+    pyplot.plot(plotList)
+    pyplot.xlabel(xLabel)
+    pyplot.ylabel(yLabel)
+    pyplot.title(plotTitle)
+    pyplot.grid(showGrid)
+
+    pdb.set_trace()
 
 if __name__ == "__main__":
     main(sys.argv, len(sys.argv))
