@@ -38,10 +38,10 @@ def main(argv, argc):
     features = np.asarray(init_data(NUMBER_OF_JOKES, FEATURE_COUNT))
     prefs = np.asarray(init_data(FEATURE_COUNT, len(ratings)))
 
-    collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
+    # collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
 
-    # example_results = [1.1, 3.3, 6.6, 3.8, 5.2, 1.9, 0.7]
-    # plotResults(example_results)
+    example_results = [1.1, 3.3, 6.6, 3.8, 5.2, 1.9, 0.7]
+    plotResults(example_results)
     pdb.set_trace()
 
 #   row - i
@@ -67,7 +67,7 @@ def config_read():
 
 
 def init_data(rows, cols):
-    print("-> init_data(size=" + str(size) + ")")
+    print("-> init_data(rows=" + str(rows) + ", cols=" + str(cols) + ")")
     features = []
     for _ in range(0, rows):
         tempFeatures = []
@@ -127,7 +127,7 @@ def plotResults(squaredErrorRateList):
     yLabel = "Squared Error Rate"
     plotTitle = "Squared Error Rate Change per Iteration"
     showGrid = True
-    outputFile = ""
+    outputFile = "cf_results.png"
 
     for i in range(1, len(squaredErrorRateList)):
         plotList.extend([i, squaredErrorRateList[i]])
@@ -137,8 +137,7 @@ def plotResults(squaredErrorRateList):
     pyplot.ylabel(yLabel)
     pyplot.title(plotTitle)
     pyplot.grid(showGrid)
-
-    pdb.set_trace()
+    pyplot.savefig(outputFile)
 
 if __name__ == "__main__":
     main(sys.argv, len(sys.argv))
