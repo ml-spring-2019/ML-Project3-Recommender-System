@@ -1,15 +1,15 @@
 # Project 3 - Recommender System
-### Quick Start
+## Quick Start
 To run the program, type:
 ```bash
-> python main.py <jester-data>
+> python main.py <jester-data> [plot-output-filename]
 ```
 
 `main.py` takes in the following parameters:
 - `jester-data` - training data
 - `output-filename` (optional) - filename for the output plot. File extension must be provided. Default name: `cf_results.png`
 
-#####Examples:
+#### Examples
 
 No output filename:
 ```bash
@@ -21,7 +21,7 @@ With output filename:
 > python main.py data/jester-data-2.csv my_plot.png
 ```  
 
-### Data Files Format 
+## Data Files Format 
 - Data files are `.csv` type.
 - Each row represents a single user.
 - The first column gives the number of jokes rated by that user.
@@ -29,12 +29,12 @@ With output filename:
 - Ratings are `float` type from `-10.0` to `10.0`.
 - Ratings containing `99.0` represent an unvoted (null rated) joke.
 
-### Configuration File
+## Configuration File
 Configurations may be changed at: `config.json`.
 The following may be modified:
 - `alpha` - variable used in the collaborative filtering algorithm.
 - `lambda` - variable used in the collaborative filtering algorithm.
 
-### References
+## References
 
 Jester Datasets: http://eigentaste.berkeley.edu/dataset/
