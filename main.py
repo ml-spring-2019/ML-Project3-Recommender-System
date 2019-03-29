@@ -33,7 +33,9 @@ def main(argv, argc):
     cf_lambda, cf_alpha = config_read()
 
     ratings, answeredCount = fileIO(argv)
-    # meanNormalization(ratings)
+
+    rating_means = []
+    meanNormalization(ratings, rating_means)
 
     features = np.asarray(init_data(NUMBER_OF_JOKES, FEATURE_COUNT))
     prefs = np.asarray(init_data(FEATURE_COUNT, len(ratings)))
@@ -103,7 +105,7 @@ def isUnrated(rating):
     return rating == UNRATED
 
 
-def meanNormalization(ratings):
+def meanNormalization(ratings, rating_means):
     print("-> meanNormalization()")
 
     for joke in range(0, NUMBER_OF_JOKES):
@@ -123,6 +125,20 @@ def meanNormalization(ratings):
             rating = ratings[i][joke]
             if not isUnrated(rating):
                 ratings[i][joke] -= jokeRatingAverage
+                rating_means.append(jokeRatingAverage)
+
+
+def addMeans(ratings, rating_means):
+    print("-> addMeans()")
+
+    for joke in range(0, NUMBER_OF_JOKES):
+        meanToAdd = rating_means[joke]
+
+        for i in range(0, len(ratings)):
+            rating = ratings[i][joke]
+            if not isUnrated(rating):
+                ratings[i][joke] += meanToAdd
+
 
 def plotResults(squaredErrorRateList, outputFilename="cf_results.png"):
     plotList = []
