@@ -27,7 +27,7 @@ CONFIG_FILE = "config.json"
 
 def main(argv, argc):
     if argc < 2:
-        print("Usage: python main.py <jester-data>")
+        print("Usage: python main.py <jester-data> [plot-output-filename]")
         exit(1)
 
     cf_lambda, cf_alpha = config_read()
@@ -41,7 +41,10 @@ def main(argv, argc):
     # collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
 
     example_results = [1.1, 3.3, 6.6, 3.8, 5.2, 1.9, 0.7]
-    plotResults(example_results)
+    if argc == 3:
+        plotResults(example_results, argv[2])
+    else:
+        plotResults(example_results)
     pdb.set_trace()
 
 #   row - i
@@ -58,7 +61,7 @@ def collaborativeFilteringAlgorithm(features, prefs, ratings):
         for f in range(prefs_dimensions[1]):
             pdb.set_trace()
             predicted_rating = np.matmul(transposed_prefs[f,:],features[:,i])
-            error_rate = predicted_rating - 
+            # error_rate = predicted_rating -
     return
 
 def config_read():
@@ -121,14 +124,13 @@ def meanNormalization(ratings):
             if not isUnrated(rating):
                 ratings[i][joke] -= jokeRatingAverage
 
-def plotResults(squaredErrorRateList):
+def plotResults(squaredErrorRateList, outputFilename="cf_results.png"):
     plotList = []
 
     xLabel = "Iterations"
     yLabel = "Squared Error Rate"
     plotTitle = "Squared Error Rate Change per Iteration"
     showGrid = True
-    outputFile = "cf_results.png"
 
     for i in range(1, len(squaredErrorRateList)):
         plotList.extend([i, squaredErrorRateList[i]])
@@ -138,7 +140,8 @@ def plotResults(squaredErrorRateList):
     pyplot.ylabel(yLabel)
     pyplot.title(plotTitle)
     pyplot.grid(showGrid)
-    pyplot.savefig(outputFile)
+    pyplot.savefig(outputFilename)
+    print("Successfully exported plot to: " + outputFilename + ".")
 
 if __name__ == "__main__":
     main(sys.argv, len(sys.argv))
