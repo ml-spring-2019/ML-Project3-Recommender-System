@@ -20,17 +20,21 @@ import numpy as np
 import json
 from matplotlib import pyplot
 
-NUMBER_OF_JOKES = 100
-UNRATED = 99.0
-FEATURE_COUNT = 5
 CONFIG_FILE = "config.json"
+
+ALPHA = 0.0
+LAMBDA = 0.0
+NUMBER_OF_JOKES = 0
+UNRATED = 0.0
+FEATURE_COUNT = 0
+
 
 def main(argv, argc):
     if argc < 2:
         print("Usage: python main.py <jester-data> [plot-output-filename]")
         exit(1)
 
-    cf_lambda, cf_alpha = config_read()
+    config_read()
 
     ratings, answeredCount = fileIO(argv)
 
@@ -68,8 +72,12 @@ def collaborativeFilteringAlgorithm(features, prefs, ratings):
 
 def config_read():
     print("-> config_read()")
-    configFile = json.loads(open(CONFIG_FILE, 'r').read())
-    return configFile["lambda"], configFile["alpha"]
+    configs = json.loads(open(CONFIG_FILE, 'r').read())
+    ALPHA = float(configs["alpha"])
+    LAMBDA = float(configs["lambda"])
+    NUMBER_OF_JOKES = int(configs["number_of_jokes"])
+    UNRATED = float(configs["unrated_representation"])
+    FEATURE_COUNT = int(configs["number_of_features"])
 
 
 def init_data(rows, cols):
@@ -140,7 +148,7 @@ def addMeans(ratings, rating_means):
                 ratings[i][joke] += meanToAdd
 
 
-def plotResults(squaredErrorRateList, outputFilename="cf_results.png"):
+def plotResults(squaredErrorRateList, outputFilename="results.png"):
     plotList = []
 
     xLabel = "Iterations"

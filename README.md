@@ -34,6 +34,9 @@ Configurations may be changed at: `config.json`.
 The following may be modified:
 - `alpha` - variable used in the collaborative filtering algorithm.
 - `lambda` - variable used in the collaborative filtering algorithm.
+- `number_of_jokes` - the number of jokes for the entire dataset.
+- `unrated_representation` - the number used to represent an unrated joke.
+- `number_of_features` - the number of features to generate.
 
 ## References
 
