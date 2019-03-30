@@ -1,4 +1,13 @@
 {
+<<<<<<< HEAD
   "alpha": 0.001,
   "lambda": 0.0005
 }
+=======
+  "alpha": 0.5,
+  "lambda": 0.5,
+  "number_of_jokes": 100,
+  "unrated_representation": 99.0,
+  "number_of_features": 5
+}
+>>>>>>> 5f93f3d0ac0c90d8d525dccae998b42c5055ae21

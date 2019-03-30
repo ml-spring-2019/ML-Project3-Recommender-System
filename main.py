@@ -20,23 +20,28 @@ import numpy as np
 import json
 from matplotlib import pyplot
 
-NUMBER_OF_JOKES = 100
-UNRATED = 99.0
-FEATURE_COUNT = 5
 CONFIG_FILE = "config.json"
 CF_LAMBDA = 0
 CF_ALPHA = 0
+
+ALPHA = 0.0
+LAMBDA = 0.0
+NUMBER_OF_JOKES = 0
+UNRATED = 0.0
+FEATURE_COUNT = 0
+
 
 def main(argv, argc):
     if argc < 2:
         print("Usage: python main.py <jester-data> [plot-output-filename]")
         exit(1)
 
-    global CF_ALPHA, CF_LAMBDA
-    CF_LAMBDA, CF_ALPHA = config_read()
+    config_read()
 
     ratings, answeredCount = fileIO(argv)
-    # meanNormalization(ratings)
+
+    rating_means = []
+    meanNormalization(ratings, rating_means)
 
     features = np.asarray(init_data(FEATURE_COUNT, NUMBER_OF_JOKES))
     prefs = np.asarray(init_data(FEATURE_COUNT, len(ratings)))
@@ -79,7 +84,7 @@ def regularized_gradient_descent(num_jokes, num_users, features, prefs, ratings)
             while (True):
                 itr += 1
                 previously_optimized_feature = features[k][i]
-                regularized_variable = CF_LAMBDA*features[k][i]
+                regularized_variable = LAMBDA*features[k][i]
                 gradient_descent_val = 0
                 for j in range(num_users):
                     if ratings[j][i] != 99:
@@ -92,7 +97,7 @@ def regularized_gradient_descent(num_jokes, num_users, features, prefs, ratings)
                 if (error_rate**2 > previous_error_rate**2):
                     pdb.set_trace()
                     break
-                features[k][i] = features[k][i] - (gradient_descent_val * CF_ALPHA)
+                features[k][i] = features[k][i] - (gradient_descent_val * ALPHA)
 #               print("error rate: ", error_rate, "feature: ", features[k][i])
 #               print("gd: ", gradient_descent_val, "predicted rating: ", predicted_rating)
                 
@@ -117,8 +122,12 @@ def collaborativeFilteringAlgorithm(features, prefs, ratings):
 
 def config_read():
     print("-> config_read()")
-    configFile = json.loads(open(CONFIG_FILE, 'r').read())
-    return configFile["lambda"], configFile["alpha"]
+    configs = json.loads(open(CONFIG_FILE, 'r').read())
+    ALPHA = float(configs["alpha"])
+    LAMBDA = float(configs["lambda"])
+    NUMBER_OF_JOKES = int(configs["number_of_jokes"])
+    UNRATED = float(configs["unrated_representation"])
+    FEATURE_COUNT = int(configs["number_of_features"])
 
 
 def init_data(rows, cols):
@@ -154,7 +163,7 @@ def isUnrated(rating):
     return rating == UNRATED
 
 
-def meanNormalization(ratings):
+def meanNormalization(ratings, rating_means):
     print("-> meanNormalization()")
 
     for joke in range(0, NUMBER_OF_JOKES):
@@ -174,8 +183,22 @@ def meanNormalization(ratings):
             rating = ratings[i][joke]
             if not isUnrated(rating):
                 ratings[i][joke] -= jokeRatingAverage
+                rating_means.append(jokeRatingAverage)
 
-def plotResults(squaredErrorRateList, outputFilename="cf_results.png"):
+
+def addMeans(ratings, rating_means):
+    print("-> addMeans()")
+
+    for joke in range(0, NUMBER_OF_JOKES):
+        meanToAdd = rating_means[joke]
+
+        for i in range(0, len(ratings)):
+            rating = ratings[i][joke]
+            if not isUnrated(rating):
+                ratings[i][joke] += meanToAdd
+
+
+def plotResults(squaredErrorRateList, outputFilename="results.png"):
     plotList = []
 
     xLabel = "Iterations"
