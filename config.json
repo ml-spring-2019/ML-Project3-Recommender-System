@@ -1,4 +1,4 @@
 {
-  "alpha": 0.5,
-  "lambda": 0.5
+  "alpha": 0.001,
+  "lambda": 0.0005
 }

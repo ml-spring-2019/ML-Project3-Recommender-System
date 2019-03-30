@@ -24,21 +24,24 @@ NUMBER_OF_JOKES = 100
 UNRATED = 99.0
 FEATURE_COUNT = 5
 CONFIG_FILE = "config.json"
+CF_LAMBDA = 0
+CF_ALPHA = 0
 
 def main(argv, argc):
     if argc < 2:
         print("Usage: python main.py <jester-data> [plot-output-filename]")
         exit(1)
 
-    cf_lambda, cf_alpha = config_read()
+    global CF_ALPHA, CF_LAMBDA
+    CF_LAMBDA, CF_ALPHA = config_read()
 
     ratings, answeredCount = fileIO(argv)
     # meanNormalization(ratings)
 
-    features = np.asarray(init_data(NUMBER_OF_JOKES, FEATURE_COUNT))
+    features = np.asarray(init_data(FEATURE_COUNT, NUMBER_OF_JOKES))
     prefs = np.asarray(init_data(FEATURE_COUNT, len(ratings)))
 
-    # collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
+    collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
 
     example_results = [1.1, 3.3, 6.6, 3.8, 5.2, 1.9, 0.7]
     if argc == 3:
@@ -52,16 +55,64 @@ def main(argv, argc):
 #   FEATURE_COUNT
 #
 # need function for regularized gradient descent for the theta and x values
-def collaborativeFilteringAlgorithm(features, prefs, ratings):
-    feature_dimensions = np.shape(features)
-    prefs_dimensions = np.shape(prefs)
-    transposed_prefs = np.transpose(prefs)
+
+def findPredictedRatings(jokes_matrix, users_matrix):
+    predictedRatings = np.matmul(np.transpose(users_matrix), jokes_matrix)
+    return predictedRatings
+
+def calculateCostFunction(jokes_matrix, users_matrix, ratings):
+    predictedRatings = findPredictedRatings(jokes_matrix, users_matrix)
+#   subtract predicted ratings by actual ratings
+    difference = np.subtract(predictedRatings, ratings)
+    errored_ratings = np.square(difference)
+    error_rate = np.sum(errored_ratings)
+    return error_rate
+
+def regularized_gradient_descent(num_jokes, num_users, features, prefs, ratings):
+    error_rate = 0
     
-    for i in range(feature_dimensions[1]):
-        for f in range(prefs_dimensions[1]):
-            pdb.set_trace()
-            predicted_rating = np.matmul(transposed_prefs[f,:],features[:,i])
-            # error_rate = predicted_rating -
+    itr = 0
+    for k in range(FEATURE_COUNT):
+        for i in range(num_jokes):
+            # continual gradient descent for one cell
+            previous_error_rate = 100
+            while (True):
+                itr += 1
+                previously_optimized_feature = features[k][i]
+                regularized_variable = CF_LAMBDA*features[k][i]
+                gradient_descent_val = 0
+                for j in range(num_users):
+                    if ratings[j][i] != 99:
+                        predicted_rating = np.dot(np.transpose(prefs[:,j]), features[:,i])
+                        error_rate = (predicted_rating-ratings[j][i])
+                        altered_error_rate = error_rate * prefs[k][j]
+                        gradient_descent_val += altered_error_rate + regularized_variable
+                        pdb.set_trace()
+            
+                if (error_rate**2 > previous_error_rate**2):
+                    pdb.set_trace()
+                    break
+                features[k][i] = features[k][i] - (gradient_descent_val * CF_ALPHA)
+#               print("error rate: ", error_rate, "feature: ", features[k][i])
+#               print("gd: ", gradient_descent_val, "predicted rating: ", predicted_rating)
+                
+                previous_error_rate = error_rate
+                
+#   need to do the for loops for the preferences matrix
+    return
+
+def collaborativeFilteringAlgorithm(features, prefs, ratings):
+    num_jokes = np.shape(features)[1]
+    num_users = np.shape(prefs)[1]
+
+    regularized_gradient_descent(num_jokes, num_users, features, prefs, ratings)
+    
+#   minimize features
+#    features = regularized_gradient_descent(feature_dimensions[1], prefs_dimensions[1], features, prefs, ratings, "features")
+
+#   minimize preferences
+#    prefs = regularized_gradient_descent(feature_dimensions[1], prefs_dimensions[1], prefs, features, ratings, "preferences")
+
     return
 
 def config_read():
