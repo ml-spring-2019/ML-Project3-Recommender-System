@@ -31,6 +31,7 @@ NUMBER_OF_USERS = 0
 UNRATED = 0.0
 FEATURE_COUNT = 5
 JOKE_RATING_MEAN = 0
+GD_ITERATION = 100
 
 
 def main(argv, argc):
@@ -51,7 +52,7 @@ def main(argv, argc):
     NUMBER_OF_JOKES, NUMBER_OF_USERS = np.shape(ratings)[1], np.shape(ratings)[0]
 
     error_rates = []
-    for i in range(100):
+    for i in range(GD_ITERATION):
         error_rates.append(collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings)))
 
     example_results = [1.1, 3.3, 6.6, 3.8, 5.2, 1.9, 0.7]
