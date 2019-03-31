@@ -53,6 +53,7 @@ def main(argv, argc):
     error_rates = []
 #   Calculate the sqaured error rates of each iteration of the collaborative filtering algorithm
     for i in range(GD_ITERATION):
+        print("-> collaborativeFilteringAlgorithm() - iteration " + str(i) + "/" + str(GD_ITERATION))
         error_rates.append(collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings)))
 
 #   Create graph of squared error rate change per iteration
@@ -134,12 +135,15 @@ def collaborativeFilteringAlgorithm(features, prefs, ratings):
     feature_gd = True
     
 #   minimize features
+    print("\t-> regularized_gradient_descent() - features")
     features = regularized_gradient_descent(NUMBER_OF_JOKES, features, prefs, feature_gd, ratings)
 
 #   minimize preferences
+    print("\t-> regularized_gradient_descent() - prefs")
     prefs = regularized_gradient_descent(NUMBER_OF_USERS, features, prefs, not feature_gd, ratings)
 
 #   find total error rate
+    print("\t-> calculateCostFunction()")
     error_rate = calculateCostFunction(features, prefs, ratings)
     
     return error_rate
