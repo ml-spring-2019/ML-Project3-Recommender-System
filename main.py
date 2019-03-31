@@ -31,7 +31,7 @@ NUMBER_OF_USERS = 0
 UNRATED = 0.0
 FEATURE_COUNT = 5
 JOKE_RATING_MEAN = 0
-GD_ITERATION = 100
+GD_ITERATION = 0
 
 
 def main(argv, argc):
@@ -52,14 +52,13 @@ def main(argv, argc):
     NUMBER_OF_JOKES, NUMBER_OF_USERS = np.shape(ratings)[1], np.shape(ratings)[0]
 
     error_rates = []
-    for i in range(GD_ITERATION):
+    for _ in range(GD_ITERATION):
         error_rates.append(collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings)))
 
-    example_results = [1.1, 3.3, 6.6, 3.8, 5.2, 1.9, 0.7]
     if argc == 3:
-        plotResults(example_results, argv[2])
+        plotResults(error_rates, argv[2])
     else:
-        plotResults(example_results)
+        plotResults(error_rates)
     pdb.set_trace()
 
 def findPredictedRatings(jokes_matrix, users_matrix):
@@ -144,7 +143,7 @@ def collaborativeFilteringAlgorithm(features, prefs, ratings):
     return error_rate
 
 def config_read():
-    global ALPHA, LAMBDA, NUMBER_OF_JOKES, UNRATED, FEATURE_COUNT
+    global ALPHA, LAMBDA, NUMBER_OF_JOKES, UNRATED, FEATURE_COUNT, GD_ITERATION
     print("-> config_read()")
     configs = json.loads(open(CONFIG_FILE, 'r').read())
     ALPHA = float(configs["alpha"])
@@ -152,6 +151,7 @@ def config_read():
 #    NUMBER_OF_JOKES = int(configs["number_of_jokes"])
     UNRATED = float(configs["unrated_representation"])
     FEATURE_COUNT = int(configs["number_of_features"])
+    GD_ITERATION = int(configs["iterations_to_run"])
 
 
 def init_data(rows, cols):
@@ -224,17 +224,12 @@ def addMeans(ratings, rating_means):
 
 
 def plotResults(squaredErrorRateList, outputFilename="results.png"):
-    plotList = []
-
     xLabel = "Iterations"
     yLabel = "Squared Error Rate"
     plotTitle = "Squared Error Rate Change per Iteration"
     showGrid = True
 
-    for i in range(1, len(squaredErrorRateList)):
-        plotList.extend([i, squaredErrorRateList[i]])
-
-    pyplot.plot(plotList)
+    pyplot.plot(squaredErrorRateList)
     pyplot.xlabel(xLabel)
     pyplot.ylabel(yLabel)
     pyplot.title(plotTitle)

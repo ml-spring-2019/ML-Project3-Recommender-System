@@ -3,5 +3,6 @@
   "lambda": 0.001,
   "number_of_jokes": 100,
   "unrated_representation": 99.0,
-  "number_of_features": 5
+  "number_of_features": 5,
+  "iterations_to_run": 100
 }
