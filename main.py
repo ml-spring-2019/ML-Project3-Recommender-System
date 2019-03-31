@@ -38,28 +38,30 @@ def main(argv, argc):
     if argc < 2:
         print("Usage: python main.py <jester-data> [plot-output-filename]")
         exit(1)
-
+#   ------------------------
     config_read()
-
+#   read file
     ratings, answeredCount = fileIO(argv)
-
+#   compute mean normalization
     rating_means = []
     meanNormalization(ratings, rating_means)
-
     features = np.asarray(init_data(FEATURE_COUNT, len(ratings[0])))
     prefs = np.asarray(init_data(FEATURE_COUNT, len(ratings)))
     global NUMBER_OF_JOKES, NUMBER_OF_USERS
     NUMBER_OF_JOKES, NUMBER_OF_USERS = np.shape(ratings)[1], np.shape(ratings)[0]
-
+#   ------------------------
     error_rates = []
+#   Calculate the sqaured error rates of each iteration of the collaborative filtering algorithm
     for i in range(GD_ITERATION):
         error_rates.append(collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings)))
 
     example_results = error_rates
+#   Create graph of squared error rate change per iteration
     if argc == 3:
         plotResults(example_results, argv[2])
     else:
         plotResults(example_results)
+#   ------------------------
     pdb.set_trace()
 
 def findPredictedRatings(jokes_matrix, users_matrix):
@@ -209,19 +211,6 @@ def meanNormalization(ratings, rating_means):
             if not isUnrated(rating):
                 ratings[i][joke] -= JOKE_RATING_MEAN
                 rating_means.append(JOKE_RATING_MEAN)
-
-
-def addMeans(ratings, rating_means):
-    print("-> addMeans()")
-
-    for joke in range(0, NUMBER_OF_JOKES):
-        meanToAdd = rating_means[joke]
-
-        for i in range(0, len(ratings)):
-            rating = ratings[i][joke]
-            if not isUnrated(rating):
-                ratings[i][joke] += meanToAdd
-
 
 def plotResults(squaredErrorRateList, outputFilename="results.png"):
     plotList = []
