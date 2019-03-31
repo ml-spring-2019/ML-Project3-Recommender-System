@@ -55,7 +55,7 @@ def main(argv, argc):
     for i in range(GD_ITERATION):
         error_rates.append(collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings)))
 
-    example_results = [1.1, 3.3, 6.6, 3.8, 5.2, 1.9, 0.7]
+    example_results = error_rates
     if argc == 3:
         plotResults(example_results, argv[2])
     else:
