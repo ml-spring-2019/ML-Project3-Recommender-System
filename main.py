@@ -49,8 +49,10 @@ def main(argv, argc):
     prefs = np.asarray(init_data(FEATURE_COUNT, len(ratings)))
     global NUMBER_OF_JOKES, NUMBER_OF_USERS
     NUMBER_OF_JOKES, NUMBER_OF_USERS = np.shape(ratings)[1], np.shape(ratings)[0]
-    
-    collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
+
+    error_rates = []
+    for i in range(100):
+        error_rates.append(collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings)))
 
     example_results = [1.1, 3.3, 6.6, 3.8, 5.2, 1.9, 0.7]
     if argc == 3:
@@ -61,18 +63,34 @@ def main(argv, argc):
 
 def findPredictedRatings(jokes_matrix, users_matrix):
     predictedRatings = np.matmul(np.transpose(users_matrix), jokes_matrix)
-    return predictedRatings
+    return addJokeRatingMean(predictedRatings)
 
 def addJokeRatingMean(rating_data):
     return JOKE_RATING_MEAN + rating_data
 
 def calculateCostFunction(jokes_matrix, users_matrix, ratings):
-    predictedRatings = addJokeRatingMean(findPredictedRatings(jokes_matrix, users_matrix))
+    predictedRatings = findPredictedRatings(jokes_matrix, users_matrix)
 #   subtract predicted ratings by actual ratings
-    difference = np.subtract(predictedRatings, ratings)
-    errored_ratings = np.square(difference)
-    error_rate = np.sum(errored_ratings)
-    return error_rate
+#    difference = np.subtract(predictedRatings, ratings)
+#    errored_ratings = np.square(difference)
+#    error_rate = np.sum(errored_ratings)
+
+    difference = predictedRatings
+    ratings_range = np.shape(ratings)
+    for i in range(ratings_range[0]):
+        for j in range(ratings_range[1]):
+            if ratings[i][j] < 95:
+                difference [i][j] = difference[i][j] - ratings[i][j]
+
+    error_ratings = np.where(difference < 95, difference**2, 99)
+
+    total_error_rate = 0
+
+    for error_rating_row in error_ratings:
+        for error_rating in error_rating_row:
+            if error_rating < 95:
+                total_error_rate += error_rating
+    return total_error_rate
 
 def add(a, b):
     return a + b
@@ -90,16 +108,19 @@ def regularized_gradient_descent(RANGE, features, prefs, bool, ratings):
         actual_ratings = ratings[i,:] if not bool else ratings[:,i]
         for k in range(FEATURE_COUNT):
             predicted_rating = np.matmul(np.transpose(independent_rating), dependent_rating[:,i])
-            error_rate = np.subtract(predicted_rating, actual_ratings)
+            
+#           error_rate = np.subtract(predicted_rating, actual_ratings)
+            error_rate = np.where(actual_ratings<80, predicted_rating - actual_ratings, 99)
+            
             for itr in range(np.shape(error_rate)[0]):
-                error_rate[itr] = independent_rating[k][itr] * error_rate[itr]
+                if error_rate[itr] < 95:
+                    error_rate[itr] = independent_rating[k][itr] * error_rate[itr]
             regularizing_val = LAMBDA*dependent_rating[k][i]
-            gradient_descent_vector = regularizing_val + error_rate
+            gradient_descent_vector = np.where(error_rate != 99, regularizing_val + error_rate, error_rate)
             sum = 0
             for num in gradient_descent_vector:
-                if num <= 10:
+                if num < 95:
                     sum += num
-            
             gradient_descent_val = sum * ALPHA
             dependent_rating[k][i] = dependent_rating[k][i]-gradient_descent_val
 
