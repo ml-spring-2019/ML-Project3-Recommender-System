@@ -27,8 +27,10 @@ CF_ALPHA = 0
 ALPHA = 0.0
 LAMBDA = 0.0
 NUMBER_OF_JOKES = 0
+NUMBER_OF_USERS = 0
 UNRATED = 0.0
-FEATURE_COUNT = 0
+FEATURE_COUNT = 5
+JOKE_RATING_MEAN = 0
 
 
 def main(argv, argc):
@@ -43,9 +45,11 @@ def main(argv, argc):
     rating_means = []
     meanNormalization(ratings, rating_means)
 
-    features = np.asarray(init_data(FEATURE_COUNT, NUMBER_OF_JOKES))
+    features = np.asarray(init_data(FEATURE_COUNT, len(ratings[0])))
     prefs = np.asarray(init_data(FEATURE_COUNT, len(ratings)))
-
+    global NUMBER_OF_JOKES, NUMBER_OF_USERS
+    NUMBER_OF_JOKES, NUMBER_OF_USERS = np.shape(ratings)[1], np.shape(ratings)[0]
+    
     collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
 
     example_results = [1.1, 3.3, 6.6, 3.8, 5.2, 1.9, 0.7]
@@ -55,77 +59,75 @@ def main(argv, argc):
         plotResults(example_results)
     pdb.set_trace()
 
-#   row - i
-#   column - k
-#   FEATURE_COUNT
-#
-# need function for regularized gradient descent for the theta and x values
-
 def findPredictedRatings(jokes_matrix, users_matrix):
     predictedRatings = np.matmul(np.transpose(users_matrix), jokes_matrix)
     return predictedRatings
 
+def addJokeRatingMean(rating_data):
+    return JOKE_RATING_MEAN + rating_data
+
 def calculateCostFunction(jokes_matrix, users_matrix, ratings):
-    predictedRatings = findPredictedRatings(jokes_matrix, users_matrix)
+    predictedRatings = addJokeRatingMean(findPredictedRatings(jokes_matrix, users_matrix))
 #   subtract predicted ratings by actual ratings
     difference = np.subtract(predictedRatings, ratings)
     errored_ratings = np.square(difference)
     error_rate = np.sum(errored_ratings)
     return error_rate
 
-def regularized_gradient_descent(num_jokes, num_users, features, prefs, ratings):
-    error_rate = 0
+def add(a, b):
+    return a + b
+
+def matrix_assignment(features, prefs, bool):
+    if bool:
+        return features, prefs
+    return prefs, features
+
+def regularized_gradient_descent(RANGE, features, prefs, bool, ratings):
     
-    itr = 0
-    for k in range(FEATURE_COUNT):
-        for i in range(num_jokes):
-            # continual gradient descent for one cell
-            previous_error_rate = 100
-            while (True):
-                itr += 1
-                previously_optimized_feature = features[k][i]
-                regularized_variable = LAMBDA*features[k][i]
-                gradient_descent_val = 0
-                for j in range(num_users):
-                    if ratings[j][i] != 99:
-                        predicted_rating = np.dot(np.transpose(prefs[:,j]), features[:,i])
-                        error_rate = (predicted_rating-ratings[j][i])
-                        altered_error_rate = error_rate * prefs[k][j]
-                        gradient_descent_val += altered_error_rate + regularized_variable
-                        pdb.set_trace()
+    dependent_rating, independent_rating = matrix_assignment(features, prefs, bool)
+    
+    for i in range(RANGE):
+        actual_ratings = ratings[i,:] if not bool else ratings[:,i]
+        for k in range(FEATURE_COUNT):
+            predicted_rating = np.matmul(np.transpose(independent_rating), dependent_rating[:,i])
+            error_rate = np.subtract(predicted_rating, actual_ratings)
+            for itr in range(np.shape(error_rate)[0]):
+                error_rate[itr] = independent_rating[k][itr] * error_rate[itr]
+            regularizing_val = LAMBDA*dependent_rating[k][i]
+            gradient_descent_vector = regularizing_val + error_rate
+            sum = 0
+            for num in gradient_descent_vector:
+                if num <= 10:
+                    sum += num
             
-                if (error_rate**2 > previous_error_rate**2):
-                    pdb.set_trace()
-                    break
-                features[k][i] = features[k][i] - (gradient_descent_val * ALPHA)
-#               print("error rate: ", error_rate, "feature: ", features[k][i])
-#               print("gd: ", gradient_descent_val, "predicted rating: ", predicted_rating)
-                
-                previous_error_rate = error_rate
-                
-#   need to do the for loops for the preferences matrix
-    return
+            gradient_descent_val = sum * ALPHA
+            dependent_rating[k][i] = dependent_rating[k][i]-gradient_descent_val
+
+    return dependent_rating
 
 def collaborativeFilteringAlgorithm(features, prefs, ratings):
     num_jokes = np.shape(features)[1]
     num_users = np.shape(prefs)[1]
-
-    regularized_gradient_descent(num_jokes, num_users, features, prefs, ratings)
+    feature_gd = True
     
 #   minimize features
-#    features = regularized_gradient_descent(feature_dimensions[1], prefs_dimensions[1], features, prefs, ratings, "features")
+    features = regularized_gradient_descent(NUMBER_OF_JOKES, features, prefs, feature_gd, ratings)
 
 #   minimize preferences
-#    prefs = regularized_gradient_descent(feature_dimensions[1], prefs_dimensions[1], prefs, features, ratings, "preferences")
+    prefs = regularized_gradient_descent(NUMBER_OF_USERS, features, prefs, not feature_gd, ratings)
 
-    return
+#   find total error rate
+    error_rate = calculateCostFunction(features, prefs, ratings)
+    
+    return error_rate
 
 def config_read():
+    global ALPHA, LAMBDA, NUMBER_OF_JOKES, UNRATED, FEATURE_COUNT
     print("-> config_read()")
     configs = json.loads(open(CONFIG_FILE, 'r').read())
     ALPHA = float(configs["alpha"])
     LAMBDA = float(configs["lambda"])
-    NUMBER_OF_JOKES = int(configs["number_of_jokes"])
+#    NUMBER_OF_JOKES = int(configs["number_of_jokes"])
     UNRATED = float(configs["unrated_representation"])
     FEATURE_COUNT = int(configs["number_of_features"])
 
@@ -165,6 +167,7 @@ def isUnrated(rating):
 
 def meanNormalization(ratings, rating_means):
     print("-> meanNormalization()")
+    global JOKERATINGMEAN
 
     for joke in range(0, NUMBER_OF_JOKES):
 
@@ -177,13 +180,13 @@ def meanNormalization(ratings, rating_means):
                 jokeRatingTotal += rating
                 jokeRatingCount += 1
 
-        jokeRatingAverage = jokeRatingTotal / jokeRatingCount
+        JOKE_RATING_MEAN = jokeRatingTotal / jokeRatingCount
 
         for i in range(0, len(ratings)):
             rating = ratings[i][joke]
             if not isUnrated(rating):
-                ratings[i][joke] -= jokeRatingAverage
-                rating_means.append(jokeRatingAverage)
+                ratings[i][joke] -= JOKE_RATING_MEAN
+                rating_means.append(JOKE_RATING_MEAN)
 
 
 def addMeans(ratings, rating_means):
@@ -219,3 +222,44 @@ def plotResults(squaredErrorRateList, outputFilename="results.png"):
 
 if __name__ == "__main__":
     main(sys.argv, len(sys.argv))
+
+
+
+
+
+
+
+
+'''
+    def regularized_gradient_descent(num_jokes, num_users, features, prefs, ratings):
+    error_rate = 0
+    
+    itr = 0
+    for k in range(FEATURE_COUNT):
+    for i in range(num_jokes):
+    # continual gradient descent for one cell
+    previous_error_rate = 100
+    while (True):
+    itr += 1
+    previously_optimized_feature = features[k][i]
+    regularized_variable = LAMBDA*features[k][i]
+    gradient_descent_val = 0
+    for j in range(num_users):
+    if ratings[j][i] != 99:
+    predicted_rating = np.dot(np.transpose(prefs[:,j]), features[:,i])
+    error_rate = (predicted_rating-ratings[j][i])
+    altered_error_rate = error_rate * prefs[k][j]
+    gradient_descent_val += altered_error_rate + regularized_variable
+    pdb.set_trace()
+    
+    if (error_rate**2 > previous_error_rate**2):
+    
+    break
+    features[k][i] = features[k][i] - (gradient_descent_val * ALPHA)
+    
+    
+    previous_error_rate = error_rate
+    
+    #   need to do the for loops for the preferences matrix
+    return
+    '''
