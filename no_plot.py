@@ -18,7 +18,6 @@ import re
 import random
 import numpy as np
 import json
-from matplotlib import pyplot
 
 CONFIG_FILE = "config.json"
 CF_LAMBDA = 0
@@ -30,7 +29,7 @@ NUMBER_OF_JOKES = 0
 NUMBER_OF_USERS = 0
 UNRATED = 0.0
 FEATURE_COUNT = 5
-RATING_MEANS = []
+JOKE_RATING_MEAN = 0
 GD_ITERATION = 0
 
 
@@ -61,12 +60,8 @@ def main(argv, argc):
         error_rate = collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
         dataFile.write(str(error_rate) + "\n")
         error_rates.append(error_rate)
-
+ 
 #   create graph of squared error rate change per iteration
-    if argc == 3:
-        plotResults(error_rates, argv[2])
-    else:
-        plotResults(error_rates)
     return 0
 
 
@@ -164,7 +159,7 @@ def init_data(rows, cols):
 #   ----------------------- means normalization
 def meanNormalization(ratings, rating_means):
     print("-> meanNormalization()")
-    global RATING_MEANS
+    global JOKERATINGMEAN
     for joke in range(0, NUMBER_OF_JOKES):
 
         jokeRatingCount = 0.0
@@ -176,13 +171,13 @@ def meanNormalization(ratings, rating_means):
                 jokeRatingTotal += rating
                 jokeRatingCount += 1
 
-        joke_rating_mean = jokeRatingTotal / jokeRatingCount
+        JOKE_RATING_MEAN = jokeRatingTotal / jokeRatingCount
 
         for i in range(0, len(ratings)):
             rating = ratings[i][joke]
             if not isUnrated(rating):
-                ratings[i][joke] -= joke_rating_mean
-        RATING_MEANS.append(joke_rating_mean)
+                ratings[i][joke] -= JOKE_RATING_MEAN
+                rating_means.append(JOKE_RATING_MEAN)
 
 #   ------------------------ suplementary functions - begin
 def matrix_assignment(features, prefs, bool):
@@ -201,10 +196,7 @@ def findPredictedRatings(jokes_matrix, users_matrix):
     return addJokeRatingMean(predictedRatings)
 
 def addJokeRatingMean(rating_data):
-    global RATING_MEANS
-    for i in range(np.shape(RATING_MEANS)[0]):
-        rating_data[i] + rating_data[i]
-    return rating_data
+    return JOKE_RATING_MEAN + rating_data
 #   ------------------------ suplementary functions - end
 
 #   ----------------------- read files - begin
@@ -234,19 +226,6 @@ def config_read():
 #   ----------------------- read files - end
 
 #   ----------------------- create graph of squared error rate change per iteration
-def plotResults(squaredErrorRateList, outputFilename="results.png"):
-    xLabel = "Iterations"
-    yLabel = "Squared Error Rate"
-    plotTitle = "Squared Error Rate Change per Iteration"
-    showGrid = True
-
-    pyplot.plot(squaredErrorRateList)
-    pyplot.xlabel(xLabel)
-    pyplot.ylabel(yLabel)
-    pyplot.title(plotTitle)
-    pyplot.grid(showGrid)
-    pyplot.savefig(outputFilename)
-    print("Successfully exported plot to: " + outputFilename + ".")
 
 if __name__ == "__main__":
     main(sys.argv, len(sys.argv))
