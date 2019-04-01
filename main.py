@@ -38,73 +38,58 @@ def main(argv, argc):
     if argc < 2:
         print("Usage: python main.py <jester-data> [plot-output-filename]")
         exit(1)
-#   ------------------------
+#   ---------
     config_read()
 #   read file
     ratings, answeredCount = fileIO(argv)
 #   compute mean normalization
     rating_means = []
-    meanNormalization(ratings, rating_means)
     features = np.asarray(init_data(FEATURE_COUNT, len(ratings[0])))
     prefs = np.asarray(init_data(FEATURE_COUNT, len(ratings)))
     global NUMBER_OF_JOKES, NUMBER_OF_USERS
     NUMBER_OF_JOKES, NUMBER_OF_USERS = np.shape(ratings)[1], np.shape(ratings)[0]
-#   ------------------------
+    meanNormalization(ratings, rating_means)
+#   ---------
     error_rates = []
-#   Calculate the sqaured error rates of each iteration of the collaborative filtering algorithm
+#   calculate the sqaured error rates of each iteration of the collaborative filtering algorithm
     for i in range(GD_ITERATION):
         error_rates.append(collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings)))
 
     example_results = error_rates
-#   Create graph of squared error rate change per iteration
+#   create graph of squared error rate change per iteration
     if argc == 3:
         plotResults(example_results, argv[2])
     else:
         plotResults(example_results)
-#   ------------------------
+#   ---------
     pdb.set_trace()
 
-def findPredictedRatings(jokes_matrix, users_matrix):
-    predictedRatings = np.matmul(np.transpose(users_matrix), jokes_matrix)
-    return addJokeRatingMean(predictedRatings)
-
-def addJokeRatingMean(rating_data):
-    return JOKE_RATING_MEAN + rating_data
-
+#   ----------------------- calculate cost function
 def calculateCostFunction(jokes_matrix, users_matrix, ratings):
+#   calculate predicted ratings from joke and user matrices
     predictedRatings = findPredictedRatings(jokes_matrix, users_matrix)
-#   subtract predicted ratings by actual ratings
-#    difference = np.subtract(predictedRatings, ratings)
-#    errored_ratings = np.square(difference)
-#    error_rate = np.sum(errored_ratings)
-
+#   subtract difference matrix by ratings matrix
     difference = predictedRatings
     ratings_range = np.shape(ratings)
     for i in range(ratings_range[0]):
         for j in range(ratings_range[1]):
             if ratings[i][j] < 95:
                 difference [i][j] = difference[i][j] - ratings[i][j]
-
+#   square error_rate values
     error_ratings = np.where(difference < 95, difference**2, 99)
 
+#   sum total error rate of predicted ratings
     total_error_rate = 0
-
     for error_rating_row in error_ratings:
         for error_rating in error_rating_row:
             if error_rating < 95:
                 total_error_rate += error_rating
+
     return total_error_rate
 
-def add(a, b):
-    return a + b
-
-def matrix_assignment(features, prefs, bool):
-    if bool:
-        return features, prefs
-    return prefs, features
-
+#   ----------------------- compute regularized gradient descent on joke or user matrix
 def regularized_gradient_descent(RANGE, features, prefs, bool, ratings):
-    
+
     dependent_rating, independent_rating = matrix_assignment(features, prefs, bool)
     
     for i in range(RANGE):
@@ -112,8 +97,7 @@ def regularized_gradient_descent(RANGE, features, prefs, bool, ratings):
         for k in range(FEATURE_COUNT):
             predicted_rating = np.matmul(np.transpose(independent_rating), dependent_rating[:,i])
             
-#           error_rate = np.subtract(predicted_rating, actual_ratings)
-            error_rate = np.where(actual_ratings<80, predicted_rating - actual_ratings, 99)
+            error_rate = np.where(actual_ratings<90, predicted_rating - actual_ratings, 99)
             
             for itr in range(np.shape(error_rate)[0]):
                 if error_rate[itr] < 95:
@@ -126,36 +110,22 @@ def regularized_gradient_descent(RANGE, features, prefs, bool, ratings):
                     sum += num
             gradient_descent_val = sum * ALPHA
             dependent_rating[k][i] = dependent_rating[k][i]-gradient_descent_val
-
     return dependent_rating
 
+#   ----------------------- recommender system ~ collaborative filtering algorithm
 def collaborativeFilteringAlgorithm(features, prefs, ratings):
     num_jokes = np.shape(features)[1]
     num_users = np.shape(prefs)[1]
     feature_gd = True
-    
 #   minimize features
     features = regularized_gradient_descent(NUMBER_OF_JOKES, features, prefs, feature_gd, ratings)
-
 #   minimize preferences
     prefs = regularized_gradient_descent(NUMBER_OF_USERS, features, prefs, not feature_gd, ratings)
-
 #   find total error rate
     error_rate = calculateCostFunction(features, prefs, ratings)
-    
     return error_rate
 
-def config_read():
-    global ALPHA, LAMBDA, NUMBER_OF_JOKES, UNRATED, FEATURE_COUNT
-    print("-> config_read()")
-    configs = json.loads(open(CONFIG_FILE, 'r').read())
-    ALPHA = float(configs["alpha"])
-    LAMBDA = float(configs["lambda"])
-#    NUMBER_OF_JOKES = int(configs["number_of_jokes"])
-    UNRATED = float(configs["unrated_representation"])
-    FEATURE_COUNT = int(configs["number_of_features"])
-
-
+#   ----------------------- initialize data
 def init_data(rows, cols):
     print("-> init_data(rows=" + str(rows) + ", cols=" + str(cols) + ")")
     features = []
@@ -168,7 +138,50 @@ def init_data(rows, cols):
         features.append(tempFeatures)
     return features
 
+#   ----------------------- means normalization
+def meanNormalization(ratings, rating_means):
+    print("-> meanNormalization()")
+    global JOKERATINGMEAN
+    for joke in range(0, NUMBER_OF_JOKES):
 
+        jokeRatingCount = 0.0
+        jokeRatingTotal = 0.0
+
+        for d in ratings:
+            rating = d[joke]
+            if not isUnrated(rating):
+                jokeRatingTotal += rating
+                jokeRatingCount += 1
+
+        JOKE_RATING_MEAN = jokeRatingTotal / jokeRatingCount
+        
+        for i in range(0, len(ratings)):
+            rating = ratings[i][joke]
+            if not isUnrated(rating):
+                ratings[i][joke] -= JOKE_RATING_MEAN
+                rating_means.append(JOKE_RATING_MEAN)
+
+#   ------------------------ suplementary functions - begin
+def matrix_assignment(features, prefs, bool):
+    if bool:
+        return features, prefs
+    return prefs, features
+
+def isUnrated(rating):
+    return rating == UNRATED
+
+def add(a, b):
+    return a + b
+
+def findPredictedRatings(jokes_matrix, users_matrix):
+    predictedRatings = np.matmul(np.transpose(users_matrix), jokes_matrix)
+    return addJokeRatingMean(predictedRatings)
+
+def addJokeRatingMean(rating_data):
+    return JOKE_RATING_MEAN + rating_data
+#   ------------------------ suplementary functions - end
+
+#   ----------------------- read files - begin
 def fileIO(argv):
     print("-> fileIO()")
     DATA_FILE = 1
@@ -184,34 +197,17 @@ def fileIO(argv):
         ratings.append(tempList)
     return ratings, answeredCount
 
+def config_read():
+    global ALPHA, LAMBDA, UNRATED, FEATURE_COUNT
+    print("-> config_read()")
+    configs = json.loads(open(CONFIG_FILE, 'r').read())
+    ALPHA = float(configs["alpha"])
+    LAMBDA = float(configs["lambda"])
+    UNRATED = float(configs["unrated_representation"])
+    FEATURE_COUNT = int(configs["number_of_features"])
+#   ----------------------- read files - end
 
-def isUnrated(rating):
-    return rating == UNRATED
-
-
-def meanNormalization(ratings, rating_means):
-    print("-> meanNormalization()")
-    global JOKERATINGMEAN
-
-    for joke in range(0, NUMBER_OF_JOKES):
-
-        jokeRatingCount = 0.0
-        jokeRatingTotal = 0.0
-
-        for d in ratings:
-            rating = d[joke]
-            if not isUnrated(rating):
-                jokeRatingTotal += rating
-                jokeRatingCount += 1
-
-        JOKE_RATING_MEAN = jokeRatingTotal / jokeRatingCount
-
-        for i in range(0, len(ratings)):
-            rating = ratings[i][joke]
-            if not isUnrated(rating):
-                ratings[i][joke] -= JOKE_RATING_MEAN
-                rating_means.append(JOKE_RATING_MEAN)
-
+#   ----------------------- create graph of squared error rate change per iteration
 def plotResults(squaredErrorRateList, outputFilename="results.png"):
     plotList = []
 
@@ -233,7 +229,6 @@ def plotResults(squaredErrorRateList, outputFilename="results.png"):
 
 if __name__ == "__main__":
     main(sys.argv, len(sys.argv))
-
 
 
 
@@ -273,4 +268,4 @@ if __name__ == "__main__":
     
     #   need to do the for loops for the preferences matrix
     return
-    '''
+'''
