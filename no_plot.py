@@ -18,7 +18,6 @@ import re
 import random
 import numpy as np
 import json
-from matplotlib import pyplot
 
 CONFIG_FILE = "config.json"
 CF_LAMBDA = 0
@@ -63,10 +62,6 @@ def main(argv, argc):
         error_rates.append(error_rate)
  
 #   create graph of squared error rate change per iteration
-    if argc == 3:
-        plotResults(error_rates, argv[2])
-    else:
-        plotResults(error_rates)
     return 0
 
 
@@ -231,19 +226,6 @@ def config_read():
 #   ----------------------- read files - end
 
 #   ----------------------- create graph of squared error rate change per iteration
-def plotResults(squaredErrorRateList, outputFilename="results.png"):
-    xLabel = "Iterations"
-    yLabel = "Squared Error Rate"
-    plotTitle = "Squared Error Rate Change per Iteration"
-    showGrid = True
-
-    pyplot.plot(squaredErrorRateList)
-    pyplot.xlabel(xLabel)
-    pyplot.ylabel(yLabel)
-    pyplot.title(plotTitle)
-    pyplot.grid(showGrid)
-    pyplot.savefig(outputFilename)
-    print("Successfully exported plot to: " + outputFilename + ".")
 
 if __name__ == "__main__":
     main(sys.argv, len(sys.argv))
