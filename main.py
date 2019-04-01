@@ -63,10 +63,6 @@ def main(argv, argc):
         error_rates.append(error_rate)
  
 #   create graph of squared error rate change per iteration
-    if argc == 3:
-        plotResults(error_rates, argv[2])
-    else:
-        plotResults(error_rates)
     return 0
 
 
