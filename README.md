@@ -37,6 +37,7 @@ The following may be modified:
 - `number_of_jokes` - the number of jokes for the entire dataset.
 - `unrated_representation` - the number used to represent an unrated joke.
 - `number_of_features` - the number of features to generate.
+- `iterations_to_run` - the number of iterations to run.
 
 ## References
 

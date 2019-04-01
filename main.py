@@ -2,11 +2,11 @@
     features: 2d numpy array
     row - feature scores
     column - joke features
-    
+
     preferences: 2d numpy array
     row - preference scores
     column - user preferences
-    
+
     ratings: 2d numpy array
     row - user ratings
     column - joke ratings
@@ -31,7 +31,7 @@ NUMBER_OF_USERS = 0
 UNRATED = 0.0
 FEATURE_COUNT = 5
 JOKE_RATING_MEAN = 0
-GD_ITERATION = 100
+GD_ITERATION = 0
 
 
 def main(argv, argc):
@@ -53,16 +53,16 @@ def main(argv, argc):
     error_rates = []
 #   calculate the sqaured error rates of each iteration of the collaborative filtering algorithm
     for i in range(GD_ITERATION):
+        print("-> collaborativeFilteringAlgorithm() - iteration " + str(i) + "/" + str(GD_ITERATION))
         error_rates.append(collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings)))
-
-    example_results = error_rates
+ 
 #   create graph of squared error rate change per iteration
     if argc == 3:
-        plotResults(example_results, argv[2])
+        plotResults(error_rates, argv[2])
     else:
-        plotResults(example_results)
-#   ---------
-    pdb.set_trace()
+        plotResults(error_rates)
+    return 0
+
 
 #   ----------------------- calculate cost function
 def calculateCostFunction(jokes_matrix, users_matrix, ratings):
@@ -91,14 +91,14 @@ def calculateCostFunction(jokes_matrix, users_matrix, ratings):
 def regularized_gradient_descent(RANGE, features, prefs, bool, ratings):
 
     dependent_rating, independent_rating = matrix_assignment(features, prefs, bool)
-    
+
     for i in range(RANGE):
         actual_ratings = ratings[i,:] if not bool else ratings[:,i]
         for k in range(FEATURE_COUNT):
             predicted_rating = np.matmul(np.transpose(independent_rating), dependent_rating[:,i])
-            
+
             error_rate = np.where(actual_ratings<90, predicted_rating - actual_ratings, 99)
-            
+
             for itr in range(np.shape(error_rate)[0]):
                 if error_rate[itr] < 95:
                     error_rate[itr] = independent_rating[k][itr] * error_rate[itr]
@@ -118,14 +118,27 @@ def collaborativeFilteringAlgorithm(features, prefs, ratings):
     num_users = np.shape(prefs)[1]
     feature_gd = True
 #   minimize features
+    print("\t-> regularized_gradient_descent() - features")
     features = regularized_gradient_descent(NUMBER_OF_JOKES, features, prefs, feature_gd, ratings)
 #   minimize preferences
+    print("\t-> regularized_gradient_descent() - prefs")
     prefs = regularized_gradient_descent(NUMBER_OF_USERS, features, prefs, not feature_gd, ratings)
 #   find total error rate
+    print("\t-> calculateCostFunction()")
     error_rate = calculateCostFunction(features, prefs, ratings)
     return error_rate
 
 #   ----------------------- initialize data
+def config_read():
+    global ALPHA, LAMBDA, NUMBER_OF_JOKES, UNRATED, FEATURE_COUNT, GD_ITERATION
+    print("-> config_read()")
+    configs = json.loads(open(CONFIG_FILE, 'r').read())
+    ALPHA = float(configs["alpha"])
+    LAMBDA = float(configs["lambda"])
+#    NUMBER_OF_JOKES = int(configs["number_of_jokes"])
+    UNRATED = float(configs["unrated_representation"])
+    GD_ITERATION = int(configs["iterations_to_run"])
+
 def init_data(rows, cols):
     print("-> init_data(rows=" + str(rows) + ", cols=" + str(cols) + ")")
     features = []
@@ -154,7 +167,7 @@ def meanNormalization(ratings, rating_means):
                 jokeRatingCount += 1
 
         JOKE_RATING_MEAN = jokeRatingTotal / jokeRatingCount
-        
+
         for i in range(0, len(ratings)):
             rating = ratings[i][joke]
             if not isUnrated(rating):
@@ -198,28 +211,23 @@ def fileIO(argv):
     return ratings, answeredCount
 
 def config_read():
-    global ALPHA, LAMBDA, UNRATED, FEATURE_COUNT
+    global ALPHA, LAMBDA, UNRATED, GD_ITERATION
     print("-> config_read()")
     configs = json.loads(open(CONFIG_FILE, 'r').read())
     ALPHA = float(configs["alpha"])
     LAMBDA = float(configs["lambda"])
+    GD_ITERATION = int(configs["iterations_to_run"])
     UNRATED = float(configs["unrated_representation"])
-    FEATURE_COUNT = int(configs["number_of_features"])
 #   ----------------------- read files - end
 
 #   ----------------------- create graph of squared error rate change per iteration
 def plotResults(squaredErrorRateList, outputFilename="results.png"):
-    plotList = []
-
     xLabel = "Iterations"
     yLabel = "Squared Error Rate"
     plotTitle = "Squared Error Rate Change per Iteration"
     showGrid = True
 
-    for i in range(1, len(squaredErrorRateList)):
-        plotList.extend([i, squaredErrorRateList[i]])
-
-    pyplot.plot(plotList)
+    pyplot.plot(squaredErrorRateList)
     pyplot.xlabel(xLabel)
     pyplot.ylabel(yLabel)
     pyplot.title(plotTitle)
@@ -239,7 +247,7 @@ if __name__ == "__main__":
 '''
     def regularized_gradient_descent(num_jokes, num_users, features, prefs, ratings):
     error_rate = 0
-    
+
     itr = 0
     for k in range(FEATURE_COUNT):
     for i in range(num_jokes):
@@ -257,15 +265,15 @@ if __name__ == "__main__":
     altered_error_rate = error_rate * prefs[k][j]
     gradient_descent_val += altered_error_rate + regularized_variable
     pdb.set_trace()
-    
+
     if (error_rate**2 > previous_error_rate**2):
-    
+
     break
     features[k][i] = features[k][i] - (gradient_descent_val * ALPHA)
-    
-    
+
+
     previous_error_rate = error_rate
-    
+
     #   need to do the for loops for the preferences matrix
     return
 '''

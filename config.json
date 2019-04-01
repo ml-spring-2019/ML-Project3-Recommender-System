@@ -2,5 +2,5 @@
   "alpha": 0.005,
   "lambda": 0.001,
   "unrated_representation": 99.0,
-  "number_of_features": 10
+  "iterations_to_run": 100
 }
