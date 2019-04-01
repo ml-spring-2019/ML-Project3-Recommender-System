@@ -75,19 +75,21 @@ def calculateCostFunction(jokes_matrix, users_matrix, ratings):
     ratings_range = np.shape(ratings)
     for i in range(ratings_range[0]):
         for j in range(ratings_range[1]):
-            if ratings[i][j] < 95:
+            if ratings[i][j] != 99:
                 difference [i][j] = difference[i][j] - ratings[i][j]
+            else:
+                difference[i][j] = 99
 #   square error_rate values
-    error_ratings = np.where(difference < 95, difference**2, 99)
+    error_ratings = np.where(difference != 99, difference**2, 99)
 
 #   sum total error rate of predicted ratings
     total_error_rate = 0
+    pdb.set_trace()
     for error_rating_row in error_ratings:
         for error_rating in error_rating_row:
-            if error_rating < 95:
-                pdb.set_trace()
+            if error_rating != 99:
                 total_error_rate += error_rating
-
+    pdb.set_trace()
     return total_error_rate
 
 #   ----------------------- compute regularized gradient descent on joke or user matrix
@@ -98,12 +100,13 @@ def regularized_gradient_descent(RANGE, features, prefs, bool, ratings):
     for i in range(RANGE):
         actual_ratings = ratings[i,:] if not bool else ratings[:,i]
         for k in range(FEATURE_COUNT):
+
             predicted_rating = np.matmul(np.transpose(independent_rating), dependent_rating[:,i])
 
-            error_rate = np.where(actual_ratings<90, predicted_rating - actual_ratings, 99)
+            error_rate = np.where(actual_ratings != 99, predicted_rating - actual_ratings, 99)
 
             for itr in range(np.shape(error_rate)[0]):
-                if error_rate[itr] < 95:
+                if error_rate[itr] != 99:
                     error_rate[itr] = independent_rating[k][itr] * error_rate[itr]
 
             # pdb.set_trace()
@@ -111,7 +114,7 @@ def regularized_gradient_descent(RANGE, features, prefs, bool, ratings):
             gradient_descent_vector = np.where(error_rate != 99, regularizing_val + error_rate, error_rate)
             sum = 0
             for num in gradient_descent_vector:
-                if num < 95:
+                if num != 99:
                     sum += num
             gradient_descent_val = sum * ALPHA
 
