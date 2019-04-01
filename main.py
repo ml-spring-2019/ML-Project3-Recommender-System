@@ -85,6 +85,7 @@ def calculateCostFunction(jokes_matrix, users_matrix, ratings):
     for error_rating_row in error_ratings:
         for error_rating in error_rating_row:
             if error_rating < 95:
+                pdb.set_trace()
                 total_error_rate += error_rating
 
     return total_error_rate
