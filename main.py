@@ -18,7 +18,6 @@ import re
 import random
 import numpy as np
 import json
-from matplotlib import pyplot
 
 CONFIG_FILE = "config.json"
 CF_LAMBDA = 0
@@ -53,16 +52,12 @@ def main(argv, argc):
     error_rates = []
 #   calculate the sqaured error rates of each iteration of the collaborative filtering algorithm
 
-    dataFilename = "out.csv"
-    dataFile = open(dataFilename, "w+")
-
     for i in range(GD_ITERATION):
-        print("-> collaborativeFilteringAlgorithm() - iteration " + str(i+1) + "/" + str(GD_ITERATION))
+        #print("-> collaborativeFilteringAlgorithm() - iteration " + str(i+1) + "/" + str(GD_ITERATION))
         error_rate = collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
-        dataFile.write(str(error_rate) + "\n")
         error_rates.append(error_rate)
+        print(error_rate)
 
-#   create graph of squared error rate change per iteration
     return 0
 
 
@@ -130,21 +125,21 @@ def collaborativeFilteringAlgorithm(features, prefs, ratings):
     num_users = np.shape(prefs)[1]
     feature_gd = True
 #   minimize features
-    print("\t-> regularized_gradient_descent() - features")
+#    print("\t-> regularized_gradient_descent() - features")
     features = regularized_gradient_descent(NUMBER_OF_JOKES, features, prefs, feature_gd, ratings)
 #   minimize preferences
-    print("\t-> regularized_gradient_descent() - prefs")
+#    print("\t-> regularized_gradient_descent() - prefs")
     prefs = regularized_gradient_descent(NUMBER_OF_USERS, features, prefs, not feature_gd, ratings)
 #   find total error rate
-    print("\t-> calculateCostFunction()")
+    #print("\t-> calculateCostFunction()")
     error_rate = calculateCostFunction(features, prefs, ratings)
-    print("\t-> resulting error rate: " + str(error_rate))
+    #print("\t-> resulting error rate: " + str(error_rate))
     return error_rate
 
 #   ----------------------- initialize data
 def config_read():
     global ALPHA, LAMBDA, NUMBER_OF_JOKES, UNRATED, FEATURE_COUNT, GD_ITERATION
-    print("-> config_read()")
+    #print("-> config_read()")
     configs = json.loads(open(CONFIG_FILE, 'r').read())
     ALPHA = float(configs["alpha"])
     LAMBDA = float(configs["lambda"])
@@ -153,7 +148,7 @@ def config_read():
     GD_ITERATION = int(configs["iterations_to_run"])
 
 def init_data(rows, cols):
-    print("-> init_data(rows=" + str(rows) + ", cols=" + str(cols) + ")")
+    #print("-> init_data(rows=" + str(rows) + ", cols=" + str(cols) + ")")
     features = []
     for _ in range(0, rows):
         tempFeatures = []
@@ -166,7 +161,7 @@ def init_data(rows, cols):
 
 #   ----------------------- means normalization
 def meanNormalization(ratings, rating_means):
-    print("-> meanNormalization()")
+    #print("-> meanNormalization()")
     global RATING_MEANS
     for joke in range(0, NUMBER_OF_JOKES):
 
@@ -213,7 +208,7 @@ def addJokeRatingMean(rating_data):
 
 #   ----------------------- read files - begin
 def fileIO(argv):
-    print("-> fileIO()")
+    #print("-> fileIO()")
     DATA_FILE = 1
     ratings = []
     file = open(argv[DATA_FILE], 'r')
@@ -229,7 +224,7 @@ def fileIO(argv):
 
 def config_read():
     global ALPHA, LAMBDA, UNRATED, GD_ITERATION
-    print("-> config_read()")
+    #print("-> config_read()")
     configs = json.loads(open(CONFIG_FILE, 'r').read())
     ALPHA = float(configs["alpha"])
     LAMBDA = float(configs["lambda"])
@@ -250,7 +245,7 @@ def plotResults(squaredErrorRateList, outputFilename="results.png"):
     pyplot.title(plotTitle)
     pyplot.grid(showGrid)
     pyplot.savefig(outputFilename)
-    print("Successfully exported plot to: " + outputFilename + ".")
+    #print("Successfully exported plot to: " + outputFilename + ".")
 
 if __name__ == "__main__":
     main(sys.argv, len(sys.argv))
