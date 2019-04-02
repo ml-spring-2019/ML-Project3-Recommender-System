@@ -51,11 +51,12 @@ def main(argv, argc):
 #   ---------
     error_rates = []
 #   calculate the sqaured error rates of each iteration of the collaborative filtering algorithm
-
+    outFile = open("out.csv", "w+")
     for i in range(GD_ITERATION):
         #print("-> collaborativeFilteringAlgorithm() - iteration " + str(i+1) + "/" + str(GD_ITERATION))
         error_rate = collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
         error_rates.append(error_rate)
+        outFile.write(str(error_rate) + "\n")
         print(error_rate)
 
     return 0
@@ -125,13 +126,13 @@ def collaborativeFilteringAlgorithm(features, prefs, ratings):
     num_users = np.shape(prefs)[1]
     feature_gd = True
 #   minimize features
-#    print("\t-> regularized_gradient_descent() - features")
+    print("\t-> regularized_gradient_descent() - features")
     features = regularized_gradient_descent(NUMBER_OF_JOKES, features, prefs, feature_gd, ratings)
 #   minimize preferences
-#    print("\t-> regularized_gradient_descent() - prefs")
+    print("\t-> regularized_gradient_descent() - prefs")
     prefs = regularized_gradient_descent(NUMBER_OF_USERS, features, prefs, not feature_gd, ratings)
 #   find total error rate
-    #print("\t-> calculateCostFunction()")
+    print("\t-> calculateCostFunction()")
     error_rate = calculateCostFunction(features, prefs, ratings)
     #print("\t-> resulting error rate: " + str(error_rate))
     return error_rate
