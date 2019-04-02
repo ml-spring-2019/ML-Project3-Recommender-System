@@ -48,19 +48,15 @@ def main(argv, argc):
     prefs = np.asarray(init_data(FEATURE_COUNT, len(ratings)))
     global NUMBER_OF_JOKES, NUMBER_OF_USERS
     NUMBER_OF_JOKES, NUMBER_OF_USERS = np.shape(ratings)[1], np.shape(ratings)[0]
-    meanNormalization(ratings, rating_means)
+    # meanNormalization(ratings, rating_means)
 #   ---------
     error_rates = []
 #   calculate the sqaured error rates of each iteration of the collaborative filtering algorithm
-
-    dataFilename = "out.csv"
-    dataFile = open(dataFilename, "w+")
-
     for i in range(GD_ITERATION):
-        print("-> collaborativeFilteringAlgorithm() - iteration " + str(i+1) + "/" + str(GD_ITERATION))
+        # print("-> collaborativeFilteringAlgorithm() - iteration " + str(i+1) + "/" + str(GD_ITERATION))
         error_rate = collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
-        dataFile.write(str(error_rate) + "\n")
         error_rates.append(error_rate)
+        print(str(error_rate))
 
 #   create graph of squared error rate change per iteration
     return 0
@@ -126,22 +122,25 @@ def collaborativeFilteringAlgorithm(features, prefs, ratings):
     num_jokes = np.shape(features)[1]
     num_users = np.shape(prefs)[1]
     feature_gd = True
-#   minimize features
-    print("\t-> regularized_gradient_descent() - features")
-    features = regularized_gradient_descent(NUMBER_OF_JOKES, features, prefs, feature_gd, ratings)
 #   minimize preferences
-    print("\t-> regularized_gradient_descent() - prefs")
+#     print("\t-> regularized_gradient_descent() - prefs")
     prefs = regularized_gradient_descent(NUMBER_OF_USERS, features, prefs, not feature_gd, ratings)
+    # pdb.set_trace()
+#   minimize features
+#     print("\t-> regularized_gradient_descent() - features")
+    features = regularized_gradient_descent(NUMBER_OF_JOKES, features, prefs, feature_gd, ratings)
+    # pdb.set_trace()
+
 #   find total error rate
-    print("\t-> calculateCostFunction()")
+#     print("\t-> calculateCostFunction()")
     error_rate = calculateCostFunction(features, prefs, ratings)
-    print("\t-> resulting error rate: " + str(error_rate))
+    # print("\t-> resulting error rate: " + str(error_rate))
     return error_rate
 
 #   ----------------------- initialize data
 def config_read():
     global ALPHA, LAMBDA, NUMBER_OF_JOKES, UNRATED, FEATURE_COUNT, GD_ITERATION
-    print("-> config_read()")
+    # print("-> config_read()")
     configs = json.loads(open(CONFIG_FILE, 'r').read())
     ALPHA = float(configs["alpha"])
     LAMBDA = float(configs["lambda"])
@@ -150,7 +149,7 @@ def config_read():
     GD_ITERATION = int(configs["iterations_to_run"])
 
 def init_data(rows, cols):
-    print("-> init_data(rows=" + str(rows) + ", cols=" + str(cols) + ")")
+    # print("-> init_data(rows=" + str(rows) + ", cols=" + str(cols) + ")")
     features = []
     for _ in range(0, rows):
         tempFeatures = []
@@ -163,7 +162,7 @@ def init_data(rows, cols):
 
 #   ----------------------- means normalization
 def meanNormalization(ratings, rating_means):
-    print("-> meanNormalization()")
+    # print("-> meanNormalization()")
     global RATING_MEANS
     for joke in range(0, NUMBER_OF_JOKES):
 
@@ -198,18 +197,18 @@ def add(a, b):
 
 def findPredictedRatings(jokes_matrix, users_matrix):
     predictedRatings = np.matmul(np.transpose(users_matrix), jokes_matrix)
-    return addJokeRatingMean(predictedRatings)
+    return predictedRatings
 
 def addJokeRatingMean(rating_data):
     global RATING_MEANS
     for i in range(np.shape(RATING_MEANS)[0]):
-        rating_data[i] + rating_data[i]
+        rating_data[i] += RATING_MEANS[i]
     return rating_data
 #   ------------------------ suplementary functions - end
 
 #   ----------------------- read files - begin
 def fileIO(argv):
-    print("-> fileIO()")
+    # print("-> fileIO()")
     DATA_FILE = 1
     ratings = []
     file = open(argv[DATA_FILE], 'r')
@@ -222,15 +221,6 @@ def fileIO(argv):
             tempList.append(float(splitLine[i]))
         ratings.append(tempList)
     return ratings, answeredCount
-
-def config_read():
-    global ALPHA, LAMBDA, UNRATED, GD_ITERATION
-    print("-> config_read()")
-    configs = json.loads(open(CONFIG_FILE, 'r').read())
-    ALPHA = float(configs["alpha"])
-    LAMBDA = float(configs["lambda"])
-    GD_ITERATION = int(configs["iterations_to_run"])
-    UNRATED = float(configs["unrated_representation"])
 #   ----------------------- read files - end
 
 #   ----------------------- create graph of squared error rate change per iteration
@@ -246,7 +236,7 @@ def plotResults(squaredErrorRateList, outputFilename="results.png"):
     pyplot.title(plotTitle)
     pyplot.grid(showGrid)
     pyplot.savefig(outputFilename)
-    print("Successfully exported plot to: " + outputFilename + ".")
+    # print("Successfully exported plot to: " + outputFilename + ".")
 
 if __name__ == "__main__":
     main(sys.argv, len(sys.argv))
