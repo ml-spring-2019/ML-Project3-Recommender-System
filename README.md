@@ -53,10 +53,19 @@ With output filename:
 ## Configuration File
 Configurations may be changed at: `config.json`.
 The following may be modified:
-- `alpha` - variable used in the collaborative filtering algorithm.
-- `lambda` - variable used in the collaborative filtering algorithm.
-- `unrated_representation` - the number used to represent an unrated joke.
-- `iterations_to_run` - the number of iterations to run.
+- `alpha` - variable used in the collaborative filtering algorithm. `0.0005` is used for the large jester datasets.
+- `lambda` - variable used in the collaborative filtering algorithm. `0.0001` is used for the large jester datasets.
+- `unrated_representation` - the number used to represent an unrated joke. This value should be `99.0`
+- `iterations_to_run` - the number of iterations to run. At least `10` is recommended.
+
+## Results
+Results of running the large jester datasets can be found in the `results/` directory. 
+
+The parameters used are:
+- `alpha: 0.0005`
+- `lambda: 0.0001`
+- `unrated_representation: 99.0`
+- `iterations_to_run: 100`
 
 ## References
 
