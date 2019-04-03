@@ -35,7 +35,7 @@ GD_ITERATION = 0
 
 def main(argv, argc):
     if argc < 2:
-        print("Usage: python main.py <jester-data> [plot-output-filename]")
+        print("Usage: python main.py <jester-data> [out-filename]")
         exit(1)
 #   ---------
     config_read()
@@ -50,14 +50,22 @@ def main(argv, argc):
     meanNormalization(ratings, rating_means)
 #   ---------
     error_rates = []
+
+    outFilename = "out.csv"
+    if argc == 3:
+        outFilename = argv[2]
+
 #   calculate the sqaured error rates of each iteration of the collaborative filtering algorithm
-    outFile = open("out.csv", "w+")
+    outFile = open(outFilename, "w+")
     for i in range(GD_ITERATION):
-        #print("-> collaborativeFilteringAlgorithm() - iteration " + str(i+1) + "/" + str(GD_ITERATION))
+        print("-> collaborativeFilteringAlgorithm() - iteration " + str(i+1) + "/" + str(GD_ITERATION))
         error_rate = collaborativeFilteringAlgorithm(features, prefs, np.asarray(ratings))
         error_rates.append(error_rate)
         outFile.write(str(error_rate) + "\n")
-        print(error_rate)
+
+    print("Successfully wrote data file out to \"" + outFilename + "\"")
+    print("\nRun this to generate plot:")
+    print("python plot.py " + outFilename + "\n")
 
     return 0
 
@@ -73,18 +81,18 @@ def calculateCostFunction(jokes_matrix, users_matrix, ratings):
 
     for i in range(ratings_range[0]):
         for j in range(ratings_range[1]):
-            if ratings[i][j] != 99:
+            if ratings[i][j] != UNRATED:
                 difference [i][j] = difference[i][j] - ratings[i][j]
             else:
-                difference[i][j] = 99
+                difference[i][j] = UNRATED
 #   square error_rate values
-    error_ratings = np.where(difference != 99, difference**2, 99)
+    error_ratings = np.where(difference != UNRATED, difference**2, UNRATED)
 
 #   sum total error rate of predicted ratings
     total_error_rate = 0
     for error_rating_row in error_ratings:
         for error_rating in error_rating_row:
-            if int(error_rating) != 99:
+            if int(error_rating) != UNRATED:
                 total_error_rate += error_rating
     return total_error_rate
 
@@ -99,17 +107,17 @@ def regularized_gradient_descent(RANGE, features, prefs, bool, ratings):
 
             predicted_rating = np.matmul(np.transpose(independent_rating), dependent_rating[:,i])
 
-            error_rate = np.where(actual_ratings != 99, predicted_rating - actual_ratings, 99)
+            error_rate = np.where(actual_ratings != UNRATED, predicted_rating - actual_ratings, UNRATED)
 
             for itr in range(np.shape(error_rate)[0]):
-                if error_rate[itr] != 99:
+                if error_rate[itr] != UNRATED:
                     error_rate[itr] = independent_rating[k][itr] * error_rate[itr]
 
-#            gradient_descent_vector = np.where(error_rate != 99, regularizing_val + error_rate, error_rate)
+#            gradient_descent_vector = np.where(error_rate != UNRATED, regularizing_val + error_rate, error_rate)
             # pdb.set_trace()
             sum = 0
             for num in error_rate:
-                if num != 99:
+                if num != UNRATED:
                     sum += num
 
             regularizing_val = LAMBDA*dependent_rating[k][i]
@@ -134,7 +142,7 @@ def collaborativeFilteringAlgorithm(features, prefs, ratings):
 #   find total error rate
     print("\t-> calculateCostFunction()")
     error_rate = calculateCostFunction(features, prefs, ratings)
-    #print("\t-> resulting error rate: " + str(error_rate))
+    print("\tresulting error rate: " + str(error_rate))
     return error_rate
 
 #   ----------------------- initialize data
@@ -144,7 +152,6 @@ def config_read():
     configs = json.loads(open(CONFIG_FILE, 'r').read())
     ALPHA = float(configs["alpha"])
     LAMBDA = float(configs["lambda"])
-#    NUMBER_OF_JOKES = int(configs["number_of_jokes"])
     UNRATED = float(configs["unrated_representation"])
     GD_ITERATION = int(configs["iterations_to_run"])
 
@@ -202,7 +209,7 @@ def findPredictedRatings(jokes_matrix, users_matrix):
 def addJokeRatingMean(rating_data):
     global RATING_MEANS
     for i in range(np.shape(RATING_MEANS)[0]):
-        rating_data[i] = np.where(rating_data[i] != 99, RATING_MEANS[i] + rating_data[i], 99)
+        rating_data[i] = np.where(rating_data[i] != UNRATED, RATING_MEANS[i] + rating_data[i], UNRATED)
 #        rating_data[i][j] = RATING_MEANS[i] + rating_data[i]
     return rating_data
 #   ------------------------ suplementary functions - end
@@ -223,38 +230,10 @@ def fileIO(argv):
         ratings.append(tempList)
     return ratings, answeredCount
 
-def config_read():
-    global ALPHA, LAMBDA, UNRATED, GD_ITERATION
-    #print("-> config_read()")
-    configs = json.loads(open(CONFIG_FILE, 'r').read())
-    ALPHA = float(configs["alpha"])
-    LAMBDA = float(configs["lambda"])
-    GD_ITERATION = int(configs["iterations_to_run"])
-    UNRATED = float(configs["unrated_representation"])
 #   ----------------------- read files - end
-
-#   ----------------------- create graph of squared error rate change per iteration
-def plotResults(squaredErrorRateList, outputFilename="results.png"):
-    xLabel = "Iterations"
-    yLabel = "Squared Error Rate"
-    plotTitle = "Squared Error Rate Change per Iteration"
-    showGrid = True
-
-    pyplot.plot(squaredErrorRateList)
-    pyplot.xlabel(xLabel)
-    pyplot.ylabel(yLabel)
-    pyplot.title(plotTitle)
-    pyplot.grid(showGrid)
-    pyplot.savefig(outputFilename)
-    #print("Successfully exported plot to: " + outputFilename + ".")
 
 if __name__ == "__main__":
     main(sys.argv, len(sys.argv))
-
-
-
-
-
 
 
 '''
